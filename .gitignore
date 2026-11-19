@@ -1,0 +1,10 @@
+# Build outputs / local state — never commit
+out/
+cache/
+broadcast/31337/
+cache/31337/
+
+# Secrets — never commit
+.env
+*.key
+*.pem

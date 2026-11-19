@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AirdropGate — Agent ID-gated airdrop claims</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --text:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --green:#3fb950; --red:#f85149; --yellow:#d29922; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5; }
+  header { border-bottom:1px solid var(--line); padding:16px 20px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:2px 0 0; color:var(--muted); font-size:14px; }
+  main { max-width:960px; margin:0 auto; padding:20px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:18px; }
+  .card h2 { margin:0 0 10px; font-size:18px; }
+  .card h3 { margin:16px 0 8px; font-size:15px; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:9px 16px; font-size:14px; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button.secondary { background:transparent; border:1px solid var(--line); color:var(--text); }
+  button.danger { background:var(--red); }
+  input, textarea, select { width:100%; background:#0d1117; border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 10px; font-size:14px; margin:4px 0 12px; }
+  label { font-size:13px; color:var(--muted); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; border:1px solid var(--line); color:var(--muted); }
+  .pill.green { color:var(--green); border-color:var(--green); }
+  .pill.red { color:var(--red); border-color:var(--red); }
+  .pill.yellow { color:var(--yellow); border-color:var(--yellow); }
+  .muted { color:var(--muted); font-size:13px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; word-break:break-all; }
+  .campaign { border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px; background:#0d1117; }
+  .campaign .row { justify-content:space-between; }
+  #status { min-height:20px; font-size:14px; margin-top:8px; }
+  .ok { color:var(--green); } .err { color:var(--red); } .warn { color:var(--yellow); }
+  footer { max-width:960px; margin:0 auto; padding:0 20px 30px; color:var(--muted); font-size:13px; }
+  a { color:var(--accent); }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>AirdropGate</h1>
+    <p>Airdrop claims gated by Agent ID — one claim per Agent ID, Sybil-resistant distribution.</p>
+  </div>
+  <div class="row">
+    <span id="networkPill" class="pill">not connected</span>
+    <button id="netMainBtn" class="secondary" title="Switch wallet to chain ID 56">Mainnet</button>
+    <button id="netTestBtn" class="secondary" title="Switch wallet to chain ID 97">Testnet</button>
+    <span id="agentPill" class="pill">Agent ID: ?</span>
+    <button id="connectBtn">Connect wallet</button>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>How it works</h2>
+    <p>Projects fund a campaign with tokens. Only wallets that hold an Agent ID can claim, once per campaign. Two kinds of campaigns:</p>
+    <ul>
+      <li><b>Allowlist</b> — the creator publishes a list of addresses. Your claim needs a Merkle proof, built in your browser from that list. Nothing is uploaded anywhere.</li>
+      <li><b>Open</b> — any Agent ID holder can claim, first come first served, until the campaign is full or its deadline passes.</li>
+    </ul>
+    <p class="muted">The gate reads your Agent ID directly from the Agent ID contract on-chain (<span class="mono" id="agentContractAddr"></span>). This site never resolves a name to a wallet, never stores a session, and never asks for a seed phrase, private key, or API secret. Every transaction is confirmed by you in your own wallet.</p>
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Create a campaign</h2>
+    <p class="muted">Fund a campaign from your wallet. The contract pulls exactly <span class="mono">amount per claim × max claims</span> tokens from you. You can cancel before the deadline and reclaim unclaimed tokens after the deadline or after cancelling.</p>
+    <label>Token contract address (ERC-20)</label>
+    <input id="fToken" placeholder="0x..." autocomplete="off">
+    <div class="row">
+      <div style="flex:1;min-width:160px"><label>Amount per claim</label><input id="fAmount" type="number" min="0" step="any" placeholder="e.g. 10"></div>
+      <div style="flex:1;min-width:160px"><label>Max claims</label><input id="fMax" type="number" min="1" step="1" placeholder="e.g. 50"></div>
+      <div style="flex:1;min-width:200px"><label>Deadline (local time)</label><input id="fDeadline" type="datetime-local"></div>
+    </div>
+    <label>Allowlist addresses — one per line. Leave empty for an open campaign.</label>
+    <textarea id="fList" rows="5" placeholder="0xabc...&#10;0xdef..."></textarea>
+    <div class="row">
+      <button id="previewBtn">Preview campaign</button>
+      <button id="approveBtn" class="secondary" disabled>1. Approve tokens</button>
+      <button id="createBtn" disabled>2. Create campaign</button>
+    </div>
+    <div id="previewBox" class="mono muted" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Campaigns <span class="muted" id="campaignCount"></span></h2>
+    <div id="campaignList"><p class="muted">Connect a wallet to load campaigns from the chain.</p></div>
+  </div>
+
+  <div class="card hidden" id="detailCard">
+    <h2>Campaign <span id="detailId"></span></h2>
+    <div id="detailBody"></div>
+    <h3>Check your eligibility</h3>
+    <div id="eligibility"></div>
+    <div id="allowlistBox" class="hidden">
+      <label>Paste the campaign allowlist (one address per line) to build your proof in-browser</label>
+      <textarea id="dList" rows="5" placeholder="0xabc...&#10;0xdef..."></textarea>
+      <button id="checkProofBtn" class="secondary">Check membership &amp; build proof</button>
+      <div id="proofBox" class="mono muted" style="margin-top:8px"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="claimBtn" disabled>Claim</button>
+      <button id="cancelBtn" class="danger hidden">Cancel campaign</button>
+      <button id="reclaimBtn" class="secondary hidden">Reclaim unclaimed tokens</button>
+    </div>
+    <div id="detailStatus" style="margin-top:8px"></div>
+  </div>
+</main>
+
+<footer>
+  <p><b>Please read before claiming.</b> Claiming costs network gas. Tokens distributed through a campaign may have no value. AirdropGate is a smart contract on chain ID 56 (mainnet) and chain ID 97 (testnet); this page only reads the chain and asks your wallet to sign transactions you approve. It never collects seed phrases, private keys, API secrets, or pairing codes, and it never places orders on your behalf. Contract source is open and verified on the block explorer — see the repository README for the address, the Agent ID usage description, and the owner-permissions disclosure.</p>
+  <p>Repository: <a href="https://github.com/0xfari/airdropgate" target="_blank" rel="noopener">github.com/0xfari/airdropgate</a></p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
