@@ -52,12 +52,12 @@ The contract can never trap funds: every funded token is either claimed by an Ag
 
 | Network | AirdropGate | Agent ID | Status |
 |---|---|---|---|
-| Testnet (chain ID 97) | — | mock (deployed with the gate) | Deployment pending — testnet faucet funding required (see below) |
+| Testnet (chain ID 97) | `0xBe253998add7366A0099E2b4fd22d02026a74D56` | mock `0x0B66E14D886630f5190280FCd2e40007a26Ee7CC` | Live since 2026-11-19; DemoToken `0x0bE3914d0d02C81949f8d39948B59AF48ec6582a`; all three verified exact-match on Sourcify |
 | Mainnet (chain ID 56) | — | `0x60b9262456de011f7d15a54cdd8c48baaa8b022f` | Planned after testnet verification |
 
-Testnet deployer (fresh key, testnet only): `0xee33A844fe7cA978D2798a0eaD1C823D61367680`. It holds no funds yet; the drip must come from the testnet faucet, which requires solving a captcha in a browser.
+Testnet deployer (fresh key, testnet only): `0xee33A844fe7cA978D2798a0eaD1C823D61367680`. Funded 2026-11-19 with 0.1 tBNB from the official BNB Chain Telegram faucet bot; deploy cost ~0.0005 tBNB. (The web faucet refused this fresh address — it requires ≥0.002 BNB on BSC mainnet — and the QuickNode faucet was dry that day.)
 
-Verify on the block explorer after each deploy (`forge verify-contract`; a BscScan API key is required — none is on file yet, Sourcify is the fallback).
+Verify on the block explorer after each deploy (`forge verify-contract`; a BscScan API key is required — none is on file yet, Sourcify is the fallback). Testnet contracts were verified with Sourcify (exact match).
 
 ## Website
 

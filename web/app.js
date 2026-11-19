@@ -12,8 +12,8 @@ const NETWORKS = {
   },
   97: {
     label: "Chain ID 97 (testnet)",
-    agentId: "0x0000000000000000000000000000000000000000", // filled after testnet deploy
-    contract: "0x0000000000000000000000000000000000000000", // filled after testnet deploy
+    agentId: "0x0B66E14D886630f5190280FCd2e40007a26Ee7CC", // MockAgentId, deployed 2026-11-19
+    contract: "0xBe253998add7366A0099E2b4fd22d02026a74D56", // AirdropGate, deployed 2026-11-19
     explorer: "https://testnet.bscscan.com",
     rpc: "https://data-seed-prebsc-1-s1.binance.org:8545/",
   },

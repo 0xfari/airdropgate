@@ -19,27 +19,37 @@
   deploy (MockAgentId + DemoToken + AirdropGate) → mint Agent ID → create open
   campaign → claim (balance 100, hasClaimed true, remaining 1). ONCHAIN COMPLETE.
 
-## Blocked — needs the parent agent (browser)
-1. **Testnet deploy (chain 97) — faucet captcha.** Fresh deployer
-   `0xee33A844fe7cA978D2798a0eaD1C823D61367680` has 0 tBNB. The official faucet
-   (https://www.bnbchain.org/en/testnet-faucet) requires hCaptcha in a browser;
-   QuickNode's faucet additionally requires a small mainnet balance on the
-   claiming wallet, which the fresh deployer does not have. No API-only faucet
-   exists. Unblock: browser task claiming tBNB to the deployer address
-   (0.1 tBNB is plenty; full deploy ≈ 0.01 tBNB at testnet gas prices).
-   Deployer private key: `~/.airdropgate-testnet-key` (0600, outside the repo,
-   never committed, never printed).
-2. **BscScan verification — no API key.** Checked env + vault paths; none exists.
-   After testnet deploy, try Sourcify first (`forge verify-contract --verifier
-   sourcify`); if that fails, a BscScan API key is needed (Fari must provide one).
+## Done — testnet deployed 2026-11-19 ~13:15 WIB
+- **Funding:** 0.1 tBNB arrived from the official BNB Chain Telegram faucet
+  bot (@bnbchain_official_bot) after Fari sent the deployer address.
+  (Web faucet refused: needs ≥0.002 mainnet BNB. QuickNode was dry.)
+- **Deploy** (forge script, legacy txs at 1 gwei — BSC testnet rejects
+  EIP-1559 tip cap 1 wei; first attempt failed on gas price, second on
+  maxFee, third needed `--start-fresh`; working flags:
+  `--broadcast --legacy --gas-price 1000000000 --start-fresh`):
+  - MockAgentId `0x0B66E14D886630f5190280FCd2e40007a26Ee7CC`
+    (tx `0x5a34dae244893f11847f4097ca19ca4b0c15dd5f8bf7a603e0614092082c9745`)
+  - DemoToken `0x0bE3914d0d02C81949f8d39948B59AF48ec6582a`
+    (tx `0x59e2eddcd43b4aa8975e03ea87ae61d511e1eb5b0ff1eda487ec8ef5c57cef58`)
+  - AirdropGate `0xBe253998add7366A0099E2b4fd22d02026a74D56`
+    (tx `0x583092c4144865b64b31c9bb8269671d6dbec9a61eb588ced5a2e994cdc5314d`)
+  - All 3 receipts status 1, block 0x88efe65; code verified on 2 RPCs.
+  - Deploy cost ~0.0005 tBNB; deployer balance now ~0.0995 tBNB.
+- **Verification:** all three exact-match on Sourcify (no BscScan key needed).
+- **Frontend:** `web/app.js` NETWORKS[97] now points at the deployed mock
+  Agent ID + gate; README deployments table updated; committed + pushed.
+- **Smoke test:** PENDING — mint mock Agent ID to deployer, create a small
+  open campaign, claim once via cast, verify hasClaimed + balance.
 
-## After the drip arrives (in order)
-1. Deploy: `DEPLOYER_PRIVATE_KEY=$(cat ~/.airdropgate-testnet-key) AGENT_ID_ADDRESS=0x0000000000000000000000000000000000000000 forge script script/Deploy.s.sol --rpc-url bsc_testnet --broadcast`
-2. Verify: try Sourcify; record addresses + tx + explorer links.
-3. Update `web/app.js` NETWORKS[97] (agentId = deployed MockAgentId, contract =
-   deployed AirdropGate) + README deployments table; commit + push.
-4. Smoke-test a claim on testnet through the live site.
-5. Mainnet deploy is NOT done and NOT authorized yet — needs Fari's explicit
+## Blocked — needs the parent agent (browser)
+1. **BscScan verification — no API key.** Not needed for testnet (Sourcify
+   exact match done). For mainnet, try Sourcify first; if that fails, a
+   BscScan API key is needed (Fari must provide one).
+
+## After the smoke test (in order)
+1. Demo campaign on testnet (see DEMO_PLAN.md) — amounts need Fari's
+   decision (suggested: open campaign, 100 claims × 10 DEMO).
+2. Mainnet deploy is NOT done and NOT authorized yet — needs Fari's explicit
    approval + funding decision per BRIEF.md (BAW holds only ~0.00055 BNB).
 
 ## Submission
