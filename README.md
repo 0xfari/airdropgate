@@ -61,7 +61,7 @@ Verify on the block explorer after each deploy (`forge verify-contract`; a BscSc
 
 ## Website
 
-`web/` — a static site, no backend, no server, no sessions. Plain HTML + JS with ethers v6 from a CDN. Connect a wallet, create campaigns, check eligibility live, and claim. Every transaction is confirmed by the user in their own wallet. Live at: **https://0xfari.github.io/airdropgate/** (GitHub Pages).
+`web/` — a static site, no backend, no server, no sessions. Plain HTML + JS with ethers v6 from a CDN. Connect a wallet, create campaigns, check eligibility live, and claim. Every transaction is confirmed by the user in their own wallet. Live at: **https://0xfari.github.io/airdropgate/web/** (GitHub Pages, served from `web/`).
 
 ## Development
 
